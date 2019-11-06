@@ -1,0 +1,3819 @@
+# 模块导入
+
+
+```python
+%matplotlib inline
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import re
+from pyecharts import options as opts
+from pyecharts.charts import Bar
+from pyecharts.render import make_snapshot
+from snapshot_selenium import snapshot
+from pyecharts.charts import Geo
+from pyecharts.globals import ChartType, SymbolType
+from pyecharts.charts import Map 
+from matplotlib.font_manager import FontProperties
+myfont=FontProperties(fname=r'C:\Windows\Fonts\simhei.ttf',size=14)
+sns.set(font=myfont.get_name())
+sns.set()#切换到seaborn的默认运行配置
+
+```
+
+# 数据处理
+
+# #数据导入与总览
+
+
+```python
+data=pd.read_csv("listings.csv")
+data.info()
+```
+
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 28452 entries, 0 to 28451
+    Data columns (total 16 columns):
+    id                                28452 non-null int64
+    name                              28451 non-null object
+    host_id                           28452 non-null int64
+    host_name                         28452 non-null object
+    neighbourhood_group               0 non-null float64
+    neighbourhood                     28452 non-null object
+    latitude                          28452 non-null float64
+    longitude                         28452 non-null float64
+    room_type                         28452 non-null object
+    price                             28452 non-null int64
+    minimum_nights                    28452 non-null int64
+    number_of_reviews                 28452 non-null int64
+    last_review                       17294 non-null object
+    reviews_per_month                 17294 non-null float64
+    calculated_host_listings_count    28452 non-null int64
+    availability_365                  28452 non-null int64
+    dtypes: float64(4), int64(7), object(5)
+    memory usage: 3.5+ MB
+    
+
+
+```python
+data.head(3)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>host_id</th>
+      <th>host_name</th>
+      <th>neighbourhood_group</th>
+      <th>neighbourhood</th>
+      <th>latitude</th>
+      <th>longitude</th>
+      <th>room_type</th>
+      <th>price</th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>last_review</th>
+      <th>reviews_per_month</th>
+      <th>calculated_host_listings_count</th>
+      <th>availability_365</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>44054</td>
+      <td>Modern and Comfortable Living in CBD</td>
+      <td>192875</td>
+      <td>East Apartments</td>
+      <td>NaN</td>
+      <td>朝阳区 / Chaoyang</td>
+      <td>39.89503</td>
+      <td>116.45163</td>
+      <td>Entire home/apt</td>
+      <td>792</td>
+      <td>1</td>
+      <td>89</td>
+      <td>2019-03-04</td>
+      <td>0.85</td>
+      <td>9</td>
+      <td>341</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>100213</td>
+      <td>The Great Wall Box Deluxe Suite A团园长城小院东院套房</td>
+      <td>527062</td>
+      <td>Joe</td>
+      <td>NaN</td>
+      <td>密云县 / Miyun</td>
+      <td>40.68434</td>
+      <td>117.17231</td>
+      <td>Private room</td>
+      <td>1201</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2017-10-08</td>
+      <td>0.10</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>128496</td>
+      <td>Heart of Beijing: House with View 2</td>
+      <td>467520</td>
+      <td>Cindy</td>
+      <td>NaN</td>
+      <td>东城区</td>
+      <td>39.93213</td>
+      <td>116.42200</td>
+      <td>Entire home/apt</td>
+      <td>389</td>
+      <td>3</td>
+      <td>259</td>
+      <td>2019-02-05</td>
+      <td>2.70</td>
+      <td>1</td>
+      <td>93</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+data.describe()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>host_id</th>
+      <th>neighbourhood_group</th>
+      <th>latitude</th>
+      <th>longitude</th>
+      <th>price</th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>reviews_per_month</th>
+      <th>calculated_host_listings_count</th>
+      <th>availability_365</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>count</td>
+      <td>2.845200e+04</td>
+      <td>2.845200e+04</td>
+      <td>0.0</td>
+      <td>28452.000000</td>
+      <td>28452.000000</td>
+      <td>28452.000000</td>
+      <td>28452.000000</td>
+      <td>28452.000000</td>
+      <td>17294.000000</td>
+      <td>28452.000000</td>
+      <td>28452.000000</td>
+    </tr>
+    <tr>
+      <td>mean</td>
+      <td>2.628583e+07</td>
+      <td>1.442821e+08</td>
+      <td>NaN</td>
+      <td>39.983225</td>
+      <td>116.442000</td>
+      <td>611.203325</td>
+      <td>2.729685</td>
+      <td>7.103156</td>
+      <td>1.319757</td>
+      <td>12.818290</td>
+      <td>220.342120</td>
+    </tr>
+    <tr>
+      <td>std</td>
+      <td>6.403312e+06</td>
+      <td>7.057051e+07</td>
+      <td>NaN</td>
+      <td>0.186984</td>
+      <td>0.204796</td>
+      <td>1623.535077</td>
+      <td>17.920932</td>
+      <td>16.815067</td>
+      <td>1.581243</td>
+      <td>29.261321</td>
+      <td>138.430677</td>
+    </tr>
+    <tr>
+      <td>min</td>
+      <td>4.405400e+04</td>
+      <td>1.928750e+05</td>
+      <td>NaN</td>
+      <td>39.455810</td>
+      <td>115.473390</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.010000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <td>25%</td>
+      <td>2.245616e+07</td>
+      <td>8.708958e+07</td>
+      <td>NaN</td>
+      <td>39.897330</td>
+      <td>116.355283</td>
+      <td>235.000000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.290000</td>
+      <td>2.000000</td>
+      <td>87.000000</td>
+    </tr>
+    <tr>
+      <td>50%</td>
+      <td>2.787765e+07</td>
+      <td>1.525464e+08</td>
+      <td>NaN</td>
+      <td>39.930905</td>
+      <td>116.434665</td>
+      <td>389.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>0.800000</td>
+      <td>5.000000</td>
+      <td>209.000000</td>
+    </tr>
+    <tr>
+      <td>75%</td>
+      <td>3.134482e+07</td>
+      <td>2.061464e+08</td>
+      <td>NaN</td>
+      <td>39.990470</td>
+      <td>116.491122</td>
+      <td>577.000000</td>
+      <td>1.000000</td>
+      <td>6.000000</td>
+      <td>1.750000</td>
+      <td>11.000000</td>
+      <td>361.000000</td>
+    </tr>
+    <tr>
+      <td>max</td>
+      <td>3.395441e+07</td>
+      <td>2.563498e+08</td>
+      <td>NaN</td>
+      <td>40.949660</td>
+      <td>117.495270</td>
+      <td>68983.000000</td>
+      <td>1125.000000</td>
+      <td>322.000000</td>
+      <td>20.000000</td>
+      <td>222.000000</td>
+      <td>365.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+# #数据清洗与处理
+
+
+```python
+data.drop("neighbourhood_group",axis=1,inplace=True)
+data["number_of_reviews"].fillna(value=data["number_of_reviews"].median(),inplace=True) #中位值填充，极值差大
+data["reviews_per_month"].fillna(value=data["reviews_per_month"].mean(),inplace=True) #均值填充
+data["last_review"].fillna(value=data["last_review"].mode().iloc[0],inplace=True) #众数填充（多个众数时，填充第一个)
+data["neighbourhood"]=data["neighbourhood"].apply(lambda x:re.sub("[A-Za-z0-9/]", "",x)) #滤除非汉字部分
+```
+
+
+```python
+data.info()
+```
+
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 28452 entries, 0 to 28451
+    Data columns (total 15 columns):
+    id                                28452 non-null int64
+    name                              28451 non-null object
+    host_id                           28452 non-null int64
+    host_name                         28452 non-null object
+    neighbourhood                     28452 non-null object
+    latitude                          28452 non-null float64
+    longitude                         28452 non-null float64
+    room_type                         28452 non-null object
+    price                             28452 non-null int64
+    minimum_nights                    28452 non-null int64
+    number_of_reviews                 28452 non-null int64
+    last_review                       28452 non-null object
+    reviews_per_month                 28452 non-null float64
+    calculated_host_listings_count    28452 non-null int64
+    availability_365                  28452 non-null int64
+    dtypes: float64(3), int64(7), object(5)
+    memory usage: 3.3+ MB
+    
+
+# 数据分析
+
+# #房东分析
+
+
+```python
+df_host_id=data["host_id"].value_counts().head(120)
+```
+
+
+```python
+data["host_id"].value_counts().describe()
+```
+
+
+
+
+    count    10792.000000
+    mean         2.636397
+    std          5.181313
+    min          1.000000
+    25%          1.000000
+    50%          1.000000
+    75%          2.000000
+    max        222.000000
+    Name: host_id, dtype: float64
+
+
+
+分析：总共10792名房东；人均拥有2.63套房源；最小值为1，最大值为222，极差为221；标准差为5.18，标准差系数为1.97.由这些统计数据可得：房东拥有的房源数量差异较大，分布较为分散，少部分人占据绝大多数房子，符合帕累托法则。
+
+
+```python
+# bar=Bar(init_opts=opts.InitOpts(renderer = "svg"))#设置导出为svg
+bar=Bar()
+bar.add_xaxis(df_host_id.index.tolist())
+bar.add_yaxis("",df_host_id.values.tolist())
+bar.set_global_opts(title_opts=opts.TitleOpts(title="host_id Count", subtitle=""), 
+                    visualmap_opts=opts.VisualMapOpts(is_show=True),
+                    toolbox_opts=opts.ToolboxOpts(is_show=True),
+                    xaxis_opts=opts.AxisOpts(name="host_id",axislabel_opts=opts.LabelOpts(rotate=90,font_size =7))) #x轴刻度标签设置
+bar.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+
+bar.render_notebook()
+# make_snapshot(snapshot, bar.render(), "bar0.svg") #导出为svg
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min'
+        }
+    });
+</script>
+
+        <div id="09e06d8ac82843f78fb387671d1c1cfd" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts'], function(echarts) {
+                var chart_09e06d8ac82843f78fb387671d1c1cfd = echarts.init(
+                    document.getElementById('09e06d8ac82843f78fb387671d1c1cfd'), 'white', {renderer: 'canvas'});
+                var option_09e06d8ac82843f78fb387671d1c1cfd = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "bar",
+            "data": [
+                222,
+                210,
+                115,
+                98,
+                77,
+                72,
+                66,
+                66,
+                64,
+                62,
+                61,
+                57,
+                51,
+                51,
+                48,
+                47,
+                46,
+                45,
+                43,
+                43,
+                42,
+                42,
+                41,
+                41,
+                41,
+                41,
+                39,
+                38,
+                37,
+                36,
+                35,
+                34,
+                33,
+                33,
+                33,
+                31,
+                31,
+                30,
+                30,
+                30,
+                29,
+                29,
+                28,
+                28,
+                28,
+                28,
+                28,
+                28,
+                27,
+                27,
+                27,
+                27,
+                27,
+                27,
+                26,
+                26,
+                26,
+                26,
+                26,
+                26,
+                26,
+                26,
+                25,
+                25,
+                25,
+                25,
+                25,
+                25,
+                25,
+                25,
+                25,
+                25,
+                25,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                24,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                23,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                22,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                20,
+                20,
+                20,
+                20,
+                20
+            ],
+            "barCategoryGap": "20%",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                ""
+            ],
+            "selected": {
+                "": true
+            },
+            "show": true
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "xAxis": [
+        {
+            "name": "host_id",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "axisLabel": {
+                "show": true,
+                "position": "top",
+                "rotate": 90,
+                "margin": 8,
+                "fontSize": 7
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "data": [
+                209669028,
+                54436429,
+                156249912,
+                17619297,
+                156143513,
+                160411460,
+                20788084,
+                196377840,
+                67553380,
+                160674938,
+                147588904,
+                35181501,
+                45203646,
+                131565769,
+                185173263,
+                165368371,
+                198529612,
+                151027648,
+                230177305,
+                8837778,
+                119706958,
+                135222407,
+                14770202,
+                235081784,
+                169233777,
+                248100378,
+                247529157,
+                197910205,
+                139578376,
+                64255458,
+                187960049,
+                148353191,
+                100576006,
+                213468831,
+                35287975,
+                27240167,
+                60847977,
+                181417731,
+                136552084,
+                31280856,
+                204937846,
+                161626931,
+                127349262,
+                168658382,
+                216709379,
+                139363184,
+                155053807,
+                43986556,
+                136495629,
+                199608290,
+                159064202,
+                117444712,
+                209622388,
+                81238003,
+                215934073,
+                189725505,
+                184187839,
+                178748241,
+                84594172,
+                165590104,
+                66529174,
+                19482030,
+                29185435,
+                29605408,
+                146456130,
+                136561759,
+                151226826,
+                42565149,
+                230114738,
+                24399335,
+                192771130,
+                162737493,
+                29719851,
+                184003671,
+                99367920,
+                63572465,
+                151033879,
+                107964962,
+                195913111,
+                151727455,
+                139339588,
+                69955838,
+                45773267,
+                229677061,
+                52080918,
+                186604107,
+                86950707,
+                181718132,
+                135287911,
+                122047010,
+                213903652,
+                132023110,
+                141982809,
+                201988771,
+                153994278,
+                229754348,
+                177444791,
+                164104576,
+                128951070,
+                121622725,
+                153700545,
+                207500717,
+                167867524,
+                169638403,
+                73699657,
+                170462410,
+                84633406,
+                177779453,
+                42065892,
+                102340754,
+                242651382,
+                177988686,
+                99317741,
+                71442680,
+                103968626,
+                106213831,
+                134984392,
+                121225836,
+                152546448,
+                250241366
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            }
+        }
+    ],
+    "title": [
+        {
+            "text": "host_id Count"
+        }
+    ],
+    "toolbox": {
+        "show": true,
+        "orient": "horizontal",
+        "itemSize": 15,
+        "itemGap": 10,
+        "left": "80%",
+        "feature": {
+            "saveAsImage": {
+                "show": true,
+                "title": "save as image",
+                "type": "png"
+            },
+            "restore": {
+                "show": true,
+                "title": "restore"
+            },
+            "dataView": {
+                "show": true,
+                "title": "data view",
+                "readOnly": false
+            },
+            "dataZoom": {
+                "show": true,
+                "title": {
+                    "zoom": "data zoom",
+                    "back": "data zoom restore"
+                }
+            }
+        }
+    },
+    "visualMap": {
+        "show": true,
+        "type": "continuous",
+        "min": 0,
+        "max": 100,
+        "inRange": {
+            "color": [
+                "#50a3ba",
+                "#eac763",
+                "#d94e5d"
+            ]
+        },
+        "calculable": true,
+        "splitNumber": 5,
+        "orient": "vertical",
+        "showLabel": true
+    }
+};
+                chart_09e06d8ac82843f78fb387671d1c1cfd.setOption(option_09e06d8ac82843f78fb387671d1c1cfd);
+        });
+    </script>
+
+
+
+
+分析：从分布形态来看，房东的房源数量呈现长尾分布，大量房源集中在少部分头部房东身上，而绝大多数房东的房源量仅为1.
+
+# #区域分析
+
+
+```python
+data["neighbourhood"]=data["neighbourhood"].apply(lambda x: x.replace("县","区"))
+df_neighbourhood=data["neighbourhood"].value_counts()
+df_neighbourhood
+```
+
+
+
+
+    朝阳区       10810
+    东城区        3346
+    海淀区        3197
+    丰台区        1758
+    西城区        1701
+    通州区        1290
+    昌平区        1034
+    密云区         935
+    顺义区         920
+    怀柔区         833
+    大兴区         823
+    延庆区         718
+    房山区         579
+    石景山区        213
+    门头沟区        152
+    平谷区         143
+    Name: neighbourhood, dtype: int64
+
+
+
+
+```python
+df_neighbourhood.describe()
+```
+
+
+
+
+    count       16.000000
+    mean      1778.250000
+    std       2587.490509
+    min        143.000000
+    25%        683.250000
+    50%        927.500000
+    75%       1715.250000
+    max      10810.000000
+    Name: neighbourhood, dtype: float64
+
+
+
+
+```python
+from pyecharts.charts import Page, Pie
+
+def pie_base() -> Pie:
+    c = (
+        Pie()
+        .add("", [list(z) for z in zip(df_neighbourhood.index.tolist(), df_neighbourhood.values.tolist())])
+        .set_global_opts(title_opts=opts.TitleOpts(title=""),legend_opts=opts.LegendOpts(is_show=False
+            ))
+        .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}"))
+    )
+    return c
+pie_base().render_notebook()
+# pie_base().render()
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min'
+        }
+    });
+</script>
+
+        <div id="33c3120dcc6e4e1db13af8c53815e4ff" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts'], function(echarts) {
+                var chart_33c3120dcc6e4e1db13af8c53815e4ff = echarts.init(
+                    document.getElementById('33c3120dcc6e4e1db13af8c53815e4ff'), 'white', {renderer: 'canvas'});
+                var option_33c3120dcc6e4e1db13af8c53815e4ff = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "pie",
+            "clockwise": true,
+            "data": [
+                {
+                    "name": "\u671d\u9633\u533a  ",
+                    "value": 10810
+                },
+                {
+                    "name": "\u4e1c\u57ce\u533a",
+                    "value": 3346
+                },
+                {
+                    "name": "\u6d77\u6dc0\u533a",
+                    "value": 3197
+                },
+                {
+                    "name": "\u4e30\u53f0\u533a  ",
+                    "value": 1758
+                },
+                {
+                    "name": "\u897f\u57ce\u533a",
+                    "value": 1701
+                },
+                {
+                    "name": "\u901a\u5dde\u533a  ",
+                    "value": 1290
+                },
+                {
+                    "name": "\u660c\u5e73\u533a",
+                    "value": 1034
+                },
+                {
+                    "name": "\u5bc6\u4e91\u533a  ",
+                    "value": 935
+                },
+                {
+                    "name": "\u987a\u4e49\u533a  ",
+                    "value": 920
+                },
+                {
+                    "name": "\u6000\u67d4\u533a  ",
+                    "value": 833
+                },
+                {
+                    "name": "\u5927\u5174\u533a  ",
+                    "value": 823
+                },
+                {
+                    "name": "\u5ef6\u5e86\u533a  ",
+                    "value": 718
+                },
+                {
+                    "name": "\u623f\u5c71\u533a",
+                    "value": 579
+                },
+                {
+                    "name": "\u77f3\u666f\u5c71\u533a",
+                    "value": 213
+                },
+                {
+                    "name": "\u95e8\u5934\u6c9f\u533a  ",
+                    "value": 152
+                },
+                {
+                    "name": "\u5e73\u8c37\u533a  ",
+                    "value": 143
+                }
+            ],
+            "radius": [
+                "0%",
+                "75%"
+            ],
+            "center": [
+                "50%",
+                "50%"
+            ],
+            "label": {
+                "show": true,
+                "position": "top",
+                "margin": 8,
+                "formatter": "{b}"
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "\u671d\u9633\u533a  ",
+                "\u4e1c\u57ce\u533a",
+                "\u6d77\u6dc0\u533a",
+                "\u4e30\u53f0\u533a  ",
+                "\u897f\u57ce\u533a",
+                "\u901a\u5dde\u533a  ",
+                "\u660c\u5e73\u533a",
+                "\u5bc6\u4e91\u533a  ",
+                "\u987a\u4e49\u533a  ",
+                "\u6000\u67d4\u533a  ",
+                "\u5927\u5174\u533a  ",
+                "\u5ef6\u5e86\u533a  ",
+                "\u623f\u5c71\u533a",
+                "\u77f3\u666f\u5c71\u533a",
+                "\u95e8\u5934\u6c9f\u533a  ",
+                "\u5e73\u8c37\u533a  "
+            ],
+            "selected": {},
+            "show": false
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "title": [
+        {}
+    ]
+};
+                chart_33c3120dcc6e4e1db13af8c53815e4ff.setOption(option_33c3120dcc6e4e1db13af8c53815e4ff);
+        });
+    </script>
+
+
+
+
+
+```python
+c = (
+        Map()
+        .add(
+            "geo",
+            [list(z) for z in zip(df_neighbourhood.index.tolist(), df_neighbourhood.values.tolist())],
+            '北京',
+        )
+        .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+        .set_global_opts(
+            visualmap_opts=opts.VisualMapOpts(max_=11000,is_piecewise=True),
+            title_opts=opts.TitleOpts(title="房源分布"),
+        )
+    )
+
+c.render_notebook()
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min', '北京':'https://assets.pyecharts.org/assets/maps/beijing'
+        }
+    });
+</script>
+
+        <div id="4c72805fa361424e85ba977ce56d5125" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts', '北京'], function(echarts) {
+                var chart_4c72805fa361424e85ba977ce56d5125 = echarts.init(
+                    document.getElementById('4c72805fa361424e85ba977ce56d5125'), 'white', {renderer: 'canvas'});
+                var option_4c72805fa361424e85ba977ce56d5125 = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "map",
+            "name": "geo",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "mapType": "\u5317\u4eac",
+            "data": [
+                {
+                    "name": "\u671d\u9633\u533a  ",
+                    "value": 10810
+                },
+                {
+                    "name": "\u4e1c\u57ce\u533a",
+                    "value": 3346
+                },
+                {
+                    "name": "\u6d77\u6dc0\u533a",
+                    "value": 3197
+                },
+                {
+                    "name": "\u4e30\u53f0\u533a  ",
+                    "value": 1758
+                },
+                {
+                    "name": "\u897f\u57ce\u533a",
+                    "value": 1701
+                },
+                {
+                    "name": "\u901a\u5dde\u533a  ",
+                    "value": 1290
+                },
+                {
+                    "name": "\u660c\u5e73\u533a",
+                    "value": 1034
+                },
+                {
+                    "name": "\u5bc6\u4e91\u533a  ",
+                    "value": 935
+                },
+                {
+                    "name": "\u987a\u4e49\u533a  ",
+                    "value": 920
+                },
+                {
+                    "name": "\u6000\u67d4\u533a  ",
+                    "value": 833
+                },
+                {
+                    "name": "\u5927\u5174\u533a  ",
+                    "value": 823
+                },
+                {
+                    "name": "\u5ef6\u5e86\u533a  ",
+                    "value": 718
+                },
+                {
+                    "name": "\u623f\u5c71\u533a",
+                    "value": 579
+                },
+                {
+                    "name": "\u77f3\u666f\u5c71\u533a",
+                    "value": 213
+                },
+                {
+                    "name": "\u95e8\u5934\u6c9f\u533a  ",
+                    "value": 152
+                },
+                {
+                    "name": "\u5e73\u8c37\u533a  ",
+                    "value": 143
+                }
+            ],
+            "roam": true,
+            "zoom": 1,
+            "showLegendSymbol": true,
+            "emphasis": {},
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "geo"
+            ],
+            "selected": {
+                "geo": true
+            },
+            "show": true
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "title": [
+        {
+            "text": "\u623f\u6e90\u5206\u5e03"
+        }
+    ],
+    "visualMap": {
+        "show": true,
+        "type": "piecewise",
+        "min": 0,
+        "max": 11000,
+        "inRange": {
+            "color": [
+                "#50a3ba",
+                "#eac763",
+                "#d94e5d"
+            ]
+        },
+        "calculable": true,
+        "splitNumber": 5,
+        "orient": "vertical",
+        "showLabel": true
+    }
+};
+                chart_4c72805fa361424e85ba977ce56d5125.setOption(option_4c72805fa361424e85ba977ce56d5125);
+        });
+    </script>
+
+
+
+
+分析：房源集中在朝阳、东城和海淀三个大区，占据了全部房源的70%左右，石景山区、门头沟区、平谷区等远离市中心的城区房源较少。
+
+
+```python
+data.groupby("neighbourhood")[["minimum_nights","number_of_reviews","reviews_per_month","availability_365"]].median().sort_values(by="number_of_reviews",ascending=False)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>reviews_per_month</th>
+      <th>availability_365</th>
+    </tr>
+    <tr>
+      <th>neighbourhood</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>东城区</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>1.319757</td>
+      <td>168.0</td>
+    </tr>
+    <tr>
+      <td>朝阳区</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.319757</td>
+      <td>181.0</td>
+    </tr>
+    <tr>
+      <td>海淀区</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.319757</td>
+      <td>313.0</td>
+    </tr>
+    <tr>
+      <td>西城区</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>1.319757</td>
+      <td>180.0</td>
+    </tr>
+    <tr>
+      <td>丰台区</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.319757</td>
+      <td>298.0</td>
+    </tr>
+    <tr>
+      <td>大兴区</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.319757</td>
+      <td>351.0</td>
+    </tr>
+    <tr>
+      <td>昌平区</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.319757</td>
+      <td>181.0</td>
+    </tr>
+    <tr>
+      <td>石景山区</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.319757</td>
+      <td>316.0</td>
+    </tr>
+    <tr>
+      <td>顺义区</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.319757</td>
+      <td>297.5</td>
+    </tr>
+    <tr>
+      <td>密云区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>181.0</td>
+    </tr>
+    <tr>
+      <td>平谷区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>178.0</td>
+    </tr>
+    <tr>
+      <td>延庆区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>179.0</td>
+    </tr>
+    <tr>
+      <td>怀柔区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>346.0</td>
+    </tr>
+    <tr>
+      <td>房山区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>346.0</td>
+    </tr>
+    <tr>
+      <td>通州区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>359.0</td>
+    </tr>
+    <tr>
+      <td>门头沟区</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.319757</td>
+      <td>305.5</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+data.groupby("neighbourhood")[["minimum_nights","number_of_reviews","reviews_per_month","availability_365"]].mean().sort_values(by="number_of_reviews",ascending=False)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>reviews_per_month</th>
+      <th>availability_365</th>
+    </tr>
+    <tr>
+      <th>neighbourhood</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>东城区</td>
+      <td>2.407053</td>
+      <td>14.340406</td>
+      <td>1.677971</td>
+      <td>195.798864</td>
+    </tr>
+    <tr>
+      <td>西城区</td>
+      <td>2.452675</td>
+      <td>8.847737</td>
+      <td>1.496890</td>
+      <td>207.766608</td>
+    </tr>
+    <tr>
+      <td>朝阳区</td>
+      <td>3.290934</td>
+      <td>8.220722</td>
+      <td>1.369384</td>
+      <td>212.362905</td>
+    </tr>
+    <tr>
+      <td>海淀区</td>
+      <td>3.686894</td>
+      <td>6.731936</td>
+      <td>1.251817</td>
+      <td>227.202690</td>
+    </tr>
+    <tr>
+      <td>丰台区</td>
+      <td>2.129693</td>
+      <td>5.385097</td>
+      <td>1.293091</td>
+      <td>235.195108</td>
+    </tr>
+    <tr>
+      <td>石景山区</td>
+      <td>1.845070</td>
+      <td>4.051643</td>
+      <td>1.168151</td>
+      <td>231.812207</td>
+    </tr>
+    <tr>
+      <td>顺义区</td>
+      <td>2.723913</td>
+      <td>3.777174</td>
+      <td>1.208822</td>
+      <td>237.038043</td>
+    </tr>
+    <tr>
+      <td>大兴区</td>
+      <td>2.221142</td>
+      <td>3.766707</td>
+      <td>1.084263</td>
+      <td>250.302552</td>
+    </tr>
+    <tr>
+      <td>昌平区</td>
+      <td>2.639265</td>
+      <td>2.611219</td>
+      <td>1.014224</td>
+      <td>221.712766</td>
+    </tr>
+    <tr>
+      <td>房山区</td>
+      <td>1.908463</td>
+      <td>2.580311</td>
+      <td>1.178904</td>
+      <td>243.696028</td>
+    </tr>
+    <tr>
+      <td>密云区</td>
+      <td>1.025668</td>
+      <td>2.268449</td>
+      <td>1.099628</td>
+      <td>226.619251</td>
+    </tr>
+    <tr>
+      <td>通州区</td>
+      <td>1.882171</td>
+      <td>2.206202</td>
+      <td>1.026900</td>
+      <td>262.044961</td>
+    </tr>
+    <tr>
+      <td>怀柔区</td>
+      <td>1.530612</td>
+      <td>1.899160</td>
+      <td>1.052463</td>
+      <td>254.716687</td>
+    </tr>
+    <tr>
+      <td>平谷区</td>
+      <td>1.006993</td>
+      <td>1.636364</td>
+      <td>1.070543</td>
+      <td>206.622378</td>
+    </tr>
+    <tr>
+      <td>门头沟区</td>
+      <td>1.605263</td>
+      <td>1.111842</td>
+      <td>0.999397</td>
+      <td>239.309211</td>
+    </tr>
+    <tr>
+      <td>延庆区</td>
+      <td>1.005571</td>
+      <td>0.873259</td>
+      <td>1.102420</td>
+      <td>213.520891</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+分析:东西城区、朝阳区的房源评论数较多，需求较多。
+
+# #房屋类型分析
+
+
+```python
+df_room_type=data["room_type"].value_counts()
+df_room_type
+```
+
+
+
+
+    Entire home/apt    16955
+    Private room        9838
+    Shared room         1659
+    Name: room_type, dtype: int64
+
+
+
+
+```python
+def pie_rich_label() -> Pie:
+    c = (
+        Pie()
+        .add(
+            "",
+            [list(z) for z in zip(df_room_type.index.tolist(), df_room_type.values.tolist())],
+            radius=["40%", "55%"],#控制环形图
+            label_opts=opts.LabelOpts(
+                position="outside",
+                formatter="{a|{a}}{abg|}\n{hr|}\n {b|{b}: }{c}  {per|{d}%}  ",
+                background_color="#eee",
+                border_color="#aaa",
+                border_width=1,
+                border_radius=4,
+                rich={
+                    "a": {"color": "#999", "lineHeight": 22, "align": "center"},
+                    "abg": {
+                        "backgroundColor": "#e3e3e3",
+                        "width": "100%",
+                        "align": "right",
+                        "height": 22,
+                        "borderRadius": [4, 4, 0, 0],
+                    },
+                    "hr": {
+                        "borderColor": "#aaa",
+                        "width": "100%",
+                        "borderWidth": 0.5,
+                        "height": 0,
+                    },
+                    "b": {"fontSize": 16, "lineHeight": 33},
+                    "per": {
+                        "color": "#eee",
+                        "backgroundColor": "#334455",
+                        "padding": [2, 4],
+                        "borderRadius": 2,
+                    },
+                },
+            ),
+        )
+        .set_global_opts(title_opts=opts.TitleOpts(title=""),legend_opts=opts.LegendOpts(is_show=False
+            ))
+    )
+    return c
+pie_rich_label().render_notebook()
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min'
+        }
+    });
+</script>
+
+        <div id="76670074b19c41ea9fd3daefebba61e9" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts'], function(echarts) {
+                var chart_76670074b19c41ea9fd3daefebba61e9 = echarts.init(
+                    document.getElementById('76670074b19c41ea9fd3daefebba61e9'), 'white', {renderer: 'canvas'});
+                var option_76670074b19c41ea9fd3daefebba61e9 = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "pie",
+            "clockwise": true,
+            "data": [
+                {
+                    "name": "Entire home/apt",
+                    "value": 16955
+                },
+                {
+                    "name": "Private room",
+                    "value": 9838
+                },
+                {
+                    "name": "Shared room",
+                    "value": 1659
+                }
+            ],
+            "radius": [
+                "40%",
+                "55%"
+            ],
+            "center": [
+                "50%",
+                "50%"
+            ],
+            "label": {
+                "show": true,
+                "position": "outside",
+                "margin": 8,
+                "formatter": "{a|{a}}{abg|}\n{hr|}\n {b|{b}: }{c}  {per|{d}%}  ",
+                "backgroundColor": "#eee",
+                "borderColor": "#aaa",
+                "borderWidth": 1,
+                "borderRadius": 4,
+                "rich": {
+                    "a": {
+                        "color": "#999",
+                        "lineHeight": 22,
+                        "align": "center"
+                    },
+                    "abg": {
+                        "backgroundColor": "#e3e3e3",
+                        "width": "100%",
+                        "align": "right",
+                        "height": 22,
+                        "borderRadius": [
+                            4,
+                            4,
+                            0,
+                            0
+                        ]
+                    },
+                    "hr": {
+                        "borderColor": "#aaa",
+                        "width": "100%",
+                        "borderWidth": 0.5,
+                        "height": 0
+                    },
+                    "b": {
+                        "fontSize": 16,
+                        "lineHeight": 33
+                    },
+                    "per": {
+                        "color": "#eee",
+                        "backgroundColor": "#334455",
+                        "padding": [
+                            2,
+                            4
+                        ],
+                        "borderRadius": 2
+                    }
+                }
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "Entire home/apt",
+                "Private room",
+                "Shared room"
+            ],
+            "selected": {},
+            "show": false
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "title": [
+        {}
+    ]
+};
+                chart_76670074b19c41ea9fd3daefebba61e9.setOption(option_76670074b19c41ea9fd3daefebba61e9);
+        });
+    </script>
+
+
+
+
+分析：目前市场上的房源以整租为主，占到60%左右上，而独立房间出租次之，房间合租则是最少。
+
+
+```python
+data.groupby("room_type")[["minimum_nights","number_of_reviews","reviews_per_month","availability_365"]].median().sort_values(by="number_of_reviews",ascending=False)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>reviews_per_month</th>
+      <th>availability_365</th>
+    </tr>
+    <tr>
+      <th>room_type</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Entire home/apt</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.319757</td>
+      <td>290</td>
+    </tr>
+    <tr>
+      <td>Private room</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.319757</td>
+      <td>180</td>
+    </tr>
+    <tr>
+      <td>Shared room</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.319757</td>
+      <td>273</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+data.groupby("room_type")[["minimum_nights","number_of_reviews","reviews_per_month","availability_365"]].mean().sort_values(by="number_of_reviews",ascending=False)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>reviews_per_month</th>
+      <th>availability_365</th>
+    </tr>
+    <tr>
+      <th>room_type</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Private room</td>
+      <td>2.510673</td>
+      <td>7.610083</td>
+      <td>1.284395</td>
+      <td>201.532832</td>
+    </tr>
+    <tr>
+      <td>Entire home/apt</td>
+      <td>2.809732</td>
+      <td>6.873371</td>
+      <td>1.356829</td>
+      <td>230.702389</td>
+    </tr>
+    <tr>
+      <td>Shared room</td>
+      <td>3.210368</td>
+      <td>6.445449</td>
+      <td>1.150570</td>
+      <td>226.000603</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+分析：从minimum_nights 	number_of_reviews 	reviews_per_month 	availability_365这个维度来看，在中位数这个量值来看，房屋类型之间无显著差异，而从均值来看，Private room的评论数最多，而Shared room 的月均评论数较多，说明这两种类型房源较受欢迎且其租客较青睐评论。
+
+# #价格分析
+
+
+```python
+data["price"].describe()
+```
+
+
+
+
+    count    28452.000000
+    mean       611.203325
+    std       1623.535077
+    min          0.000000
+    25%        235.000000
+    50%        389.000000
+    75%        577.000000
+    max      68983.000000
+    Name: price, dtype: float64
+
+
+
+
+```python
+fig,ax1=plt.subplots(1,1)
+sns.distplot(data.query("price<=3500")["price"],ax=ax1,bins=30) #面积分布情况（直方图 ）
+sns.kdeplot(data[data["price"]<=3500]["price"],shade=True,ax=ax1)#生成核密度图
+```
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x16ca949f108>
+
+
+
+
+![png](output_35_1.png)
+
+
+分析：整体上，价格比较集中，主要聚集在100-600之间， 最大值为68983可能为异常值，值得注意。
+
+
+```python
+df_neighbourhood_price=data.groupby("neighbourhood")["price"].mean().sort_values(ascending=False)
+df_neighbourhood_price2=data.groupby("neighbourhood")["price"].median().sort_values(ascending=False)
+df_neighbourhood_price3=data.groupby("neighbourhood")["price"].min().sort_values(ascending=False)
+bar = (
+        Bar()
+        .add_xaxis(df_neighbourhood_price.index.tolist())
+        .add_yaxis("价格均值", df_neighbourhood_price.values.tolist())
+        .add_yaxis("价格中位数", df_neighbourhood_price2.values.tolist())
+        .add_yaxis("价格最小值", df_neighbourhood_price3.values.tolist())
+        .set_global_opts(title_opts=opts.TitleOpts(title="Price-neighbourhood"),
+                         xaxis_opts=opts.AxisOpts(name="",axislabel_opts=opts.LabelOpts(rotate=-45,font_size =12)))
+        .set_series_opts(
+            label_opts=opts.LabelOpts(is_show=False),
+            markpoint_opts=opts.MarkPointOpts(
+                data=[
+                    opts.MarkPointItem(type_="max", name="最大值"),
+                    opts.MarkPointItem(type_="min", name="最小值"),
+                    opts.MarkPointItem(type_="average", name="平均值"),
+                ]
+            ),
+        )
+    )
+bar.render_notebook()
+
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min'
+        }
+    });
+</script>
+
+        <div id="a3e2326e73894acea3d261b005fb87ee" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts'], function(echarts) {
+                var chart_a3e2326e73894acea3d261b005fb87ee = echarts.init(
+                    document.getElementById('a3e2326e73894acea3d261b005fb87ee'), 'white', {renderer: 'canvas'});
+                var option_a3e2326e73894acea3d261b005fb87ee = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "bar",
+            "name": "\u4ef7\u683c\u5747\u503c",
+            "data": [
+                1589.7779111644659,
+                1238.9860724233984,
+                1174.803675048356,
+                1172.2657342657342,
+                966.9625668449198,
+                751.5855263157895,
+                712.4085475194262,
+                679.1502590673575,
+                667.9717391304348,
+                587.9870664315109,
+                489.5419198055893,
+                484.395282146161,
+                456.4610572411636,
+                405.5480620155039,
+                403.05164319248826,
+                384.63139931740614
+            ],
+            "barCategoryGap": "20%",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "markPoint": {
+                "label": {
+                    "show": true,
+                    "position": "inside",
+                    "color": "#fff",
+                    "margin": 8
+                },
+                "data": [
+                    {
+                        "name": "\u6700\u5927\u503c",
+                        "type": "max"
+                    },
+                    {
+                        "name": "\u6700\u5c0f\u503c",
+                        "type": "min"
+                    },
+                    {
+                        "name": "\u5e73\u5747\u503c",
+                        "type": "average"
+                    }
+                ]
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        },
+        {
+            "type": "bar",
+            "name": "\u4ef7\u683c\u4e2d\u4f4d\u6570",
+            "data": [
+                899.0,
+                678.0,
+                597.0,
+                550.0,
+                490.0,
+                450.0,
+                379.0,
+                369.0,
+                356.0,
+                336.0,
+                329.0,
+                329.0,
+                325.5,
+                315.0,
+                302.0,
+                268.0
+            ],
+            "barCategoryGap": "20%",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "markPoint": {
+                "label": {
+                    "show": true,
+                    "position": "inside",
+                    "color": "#fff",
+                    "margin": 8
+                },
+                "data": [
+                    {
+                        "name": "\u6700\u5927\u503c",
+                        "type": "max"
+                    },
+                    {
+                        "name": "\u6700\u5c0f\u503c",
+                        "type": "min"
+                    },
+                    {
+                        "name": "\u5e73\u5747\u503c",
+                        "type": "average"
+                    }
+                ]
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        },
+        {
+            "type": "bar",
+            "name": "\u4ef7\u683c\u6700\u5c0f\u503c",
+            "data": [
+                87,
+                81,
+                81,
+                67,
+                67,
+                67,
+                67,
+                67,
+                60,
+                60,
+                60,
+                47,
+                47,
+                27,
+                0,
+                0
+            ],
+            "barCategoryGap": "20%",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "markPoint": {
+                "label": {
+                    "show": true,
+                    "position": "inside",
+                    "color": "#fff",
+                    "margin": 8
+                },
+                "data": [
+                    {
+                        "name": "\u6700\u5927\u503c",
+                        "type": "max"
+                    },
+                    {
+                        "name": "\u6700\u5c0f\u503c",
+                        "type": "min"
+                    },
+                    {
+                        "name": "\u5e73\u5747\u503c",
+                        "type": "average"
+                    }
+                ]
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "\u4ef7\u683c\u5747\u503c",
+                "\u4ef7\u683c\u4e2d\u4f4d\u6570",
+                "\u4ef7\u683c\u6700\u5c0f\u503c"
+            ],
+            "selected": {
+                "\u4ef7\u683c\u5747\u503c": true,
+                "\u4ef7\u683c\u4e2d\u4f4d\u6570": true,
+                "\u4ef7\u683c\u6700\u5c0f\u503c": true
+            },
+            "show": true
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "xAxis": [
+        {
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "axisLabel": {
+                "show": true,
+                "position": "top",
+                "rotate": -45,
+                "margin": 8,
+                "fontSize": 12
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "data": [
+                "\u6000\u67d4\u533a  ",
+                "\u5ef6\u5e86\u533a  ",
+                "\u660c\u5e73\u533a",
+                "\u5e73\u8c37\u533a  ",
+                "\u5bc6\u4e91\u533a  ",
+                "\u95e8\u5934\u6c9f\u533a  ",
+                "\u4e1c\u57ce\u533a",
+                "\u623f\u5c71\u533a",
+                "\u987a\u4e49\u533a  ",
+                "\u897f\u57ce\u533a",
+                "\u5927\u5174\u533a  ",
+                "\u671d\u9633\u533a  ",
+                "\u6d77\u6dc0\u533a",
+                "\u901a\u5dde\u533a  ",
+                "\u77f3\u666f\u5c71\u533a",
+                "\u4e30\u53f0\u533a  "
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            }
+        }
+    ],
+    "title": [
+        {
+            "text": "Price-neighbourhood"
+        }
+    ]
+};
+                chart_a3e2326e73894acea3d261b005fb87ee.setOption(option_a3e2326e73894acea3d261b005fb87ee);
+        });
+    </script>
+
+
+
+
+分析：从城区房价分布来看，怀柔区的价格在均值、中位数、最小值等量值上均高于其他城区，而丰台区则价格较低。
+
+
+```python
+df_roomtpye_price=data.groupby("room_type")["price"].mean().sort_values(ascending=False)
+df_roomtpye_price2=data.groupby("room_type")["price"].median().sort_values(ascending=False)
+df_roomtpye_price3=data.groupby("room_type")["price"].min().sort_values(ascending=False)
+bar = (
+        Bar()
+        .add_xaxis(df_roomtpye_price.index.tolist())
+        .add_yaxis("价格均值", df_roomtpye_price.values.tolist())
+        .add_yaxis("价格中位数", df_roomtpye_price2.values.tolist())
+#         .add_yaxis("价格最小值", df_roomtpye_price3.values.tolist())
+        .set_global_opts(title_opts=opts.TitleOpts(title="Price-roomtype"),
+                         xaxis_opts=opts.AxisOpts(name="",axislabel_opts=opts.LabelOpts(rotate=0,font_size =12)))
+        .set_series_opts(
+            label_opts=opts.LabelOpts(is_show=False),
+            markpoint_opts=opts.MarkPointOpts(
+                data=[
+                    opts.MarkPointItem(type_="max", name="最大值"),
+                    opts.MarkPointItem(type_="min", name="最小值"),
+                    opts.MarkPointItem(type_="average", name="平均值"),
+                ]
+            ),
+        )
+    )
+bar.render_notebook()
+
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min'
+        }
+    });
+</script>
+
+        <div id="acdb03846d474117bc86e1efde8842e8" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts'], function(echarts) {
+                var chart_acdb03846d474117bc86e1efde8842e8 = echarts.init(
+                    document.getElementById('acdb03846d474117bc86e1efde8842e8'), 'white', {renderer: 'canvas'});
+                var option_acdb03846d474117bc86e1efde8842e8 = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "bar",
+            "name": "\u4ef7\u683c\u5747\u503c",
+            "data": [
+                746.4791506930109,
+                430.681236023582,
+                299.1928872814949
+            ],
+            "barCategoryGap": "20%",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "markPoint": {
+                "label": {
+                    "show": true,
+                    "position": "inside",
+                    "color": "#fff",
+                    "margin": 8
+                },
+                "data": [
+                    {
+                        "name": "\u6700\u5927\u503c",
+                        "type": "max"
+                    },
+                    {
+                        "name": "\u6700\u5c0f\u503c",
+                        "type": "min"
+                    },
+                    {
+                        "name": "\u5e73\u5747\u503c",
+                        "type": "average"
+                    }
+                ]
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        },
+        {
+            "type": "bar",
+            "name": "\u4ef7\u683c\u4e2d\u4f4d\u6570",
+            "data": [
+                470,
+                248,
+                107
+            ],
+            "barCategoryGap": "20%",
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "markPoint": {
+                "label": {
+                    "show": true,
+                    "position": "inside",
+                    "color": "#fff",
+                    "margin": 8
+                },
+                "data": [
+                    {
+                        "name": "\u6700\u5927\u503c",
+                        "type": "max"
+                    },
+                    {
+                        "name": "\u6700\u5c0f\u503c",
+                        "type": "min"
+                    },
+                    {
+                        "name": "\u5e73\u5747\u503c",
+                        "type": "average"
+                    }
+                ]
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "\u4ef7\u683c\u5747\u503c",
+                "\u4ef7\u683c\u4e2d\u4f4d\u6570"
+            ],
+            "selected": {
+                "\u4ef7\u683c\u5747\u503c": true,
+                "\u4ef7\u683c\u4e2d\u4f4d\u6570": true
+            },
+            "show": true
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "xAxis": [
+        {
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "axisLabel": {
+                "show": true,
+                "position": "top",
+                "rotate": 0,
+                "margin": 8,
+                "fontSize": 12
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "data": [
+                "Entire home/apt",
+                "Private room",
+                "Shared room"
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            }
+        }
+    ],
+    "title": [
+        {
+            "text": "Price-roomtype"
+        }
+    ]
+};
+                chart_acdb03846d474117bc86e1efde8842e8.setOption(option_acdb03846d474117bc86e1efde8842e8);
+        });
+    </script>
+
+
+
+
+
+```python
+df_roomtpye_price.describe()
+```
+
+
+
+
+    count      3.000000
+    mean     492.117758
+    std      229.884939
+    min      299.192887
+    25%      364.937062
+    50%      430.681236
+    75%      588.580193
+    max      746.479151
+    Name: price, dtype: float64
+
+
+
+分析：整租、独立房间出租、房间合租的价格一次递减，且差价在40%、30%，整租的利润空间最大。
+
+# #时间序列分析
+
+
+```python
+data["last_review"]=pd.to_datetime(data["last_review"],format="%Y-%m-%d")
+```
+
+
+```python
+data.head(5)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>host_id</th>
+      <th>host_name</th>
+      <th>neighbourhood</th>
+      <th>latitude</th>
+      <th>longitude</th>
+      <th>room_type</th>
+      <th>price</th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>last_review</th>
+      <th>reviews_per_month</th>
+      <th>calculated_host_listings_count</th>
+      <th>availability_365</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>44054</td>
+      <td>Modern and Comfortable Living in CBD</td>
+      <td>192875</td>
+      <td>East Apartments</td>
+      <td>朝阳区</td>
+      <td>39.89503</td>
+      <td>116.45163</td>
+      <td>Entire home/apt</td>
+      <td>792</td>
+      <td>1</td>
+      <td>89</td>
+      <td>2019-03-04</td>
+      <td>0.85</td>
+      <td>9</td>
+      <td>341</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>100213</td>
+      <td>The Great Wall Box Deluxe Suite A团园长城小院东院套房</td>
+      <td>527062</td>
+      <td>Joe</td>
+      <td>密云区</td>
+      <td>40.68434</td>
+      <td>117.17231</td>
+      <td>Private room</td>
+      <td>1201</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2017-10-08</td>
+      <td>0.10</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>128496</td>
+      <td>Heart of Beijing: House with View 2</td>
+      <td>467520</td>
+      <td>Cindy</td>
+      <td>东城区</td>
+      <td>39.93213</td>
+      <td>116.42200</td>
+      <td>Entire home/apt</td>
+      <td>389</td>
+      <td>3</td>
+      <td>259</td>
+      <td>2019-02-05</td>
+      <td>2.70</td>
+      <td>1</td>
+      <td>93</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>161902</td>
+      <td>cozy studio in center of Beijing</td>
+      <td>707535</td>
+      <td>Robert</td>
+      <td>东城区</td>
+      <td>39.93357</td>
+      <td>116.43577</td>
+      <td>Entire home/apt</td>
+      <td>376</td>
+      <td>1</td>
+      <td>26</td>
+      <td>2016-12-03</td>
+      <td>0.28</td>
+      <td>5</td>
+      <td>290</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>162144</td>
+      <td>nice studio near subway, sleep 4</td>
+      <td>707535</td>
+      <td>Robert</td>
+      <td>朝阳区</td>
+      <td>39.93668</td>
+      <td>116.43798</td>
+      <td>Entire home/apt</td>
+      <td>537</td>
+      <td>1</td>
+      <td>37</td>
+      <td>2018-08-01</td>
+      <td>0.40</td>
+      <td>5</td>
+      <td>352</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+data["year"]=data["last_review"].apply(lambda x:x.year)
+data["month"]=data["last_review"].apply(lambda x:x.month)
+data["day"]=data["last_review"].apply(lambda x:x.day)
+```
+
+
+```python
+data.head(5)
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>host_id</th>
+      <th>host_name</th>
+      <th>neighbourhood</th>
+      <th>latitude</th>
+      <th>longitude</th>
+      <th>room_type</th>
+      <th>price</th>
+      <th>minimum_nights</th>
+      <th>number_of_reviews</th>
+      <th>last_review</th>
+      <th>reviews_per_month</th>
+      <th>calculated_host_listings_count</th>
+      <th>availability_365</th>
+      <th>year</th>
+      <th>month</th>
+      <th>day</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>44054</td>
+      <td>Modern and Comfortable Living in CBD</td>
+      <td>192875</td>
+      <td>East Apartments</td>
+      <td>朝阳区</td>
+      <td>39.89503</td>
+      <td>116.45163</td>
+      <td>Entire home/apt</td>
+      <td>792</td>
+      <td>1</td>
+      <td>89</td>
+      <td>2019-03-04</td>
+      <td>0.85</td>
+      <td>9</td>
+      <td>341</td>
+      <td>2019</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>100213</td>
+      <td>The Great Wall Box Deluxe Suite A团园长城小院东院套房</td>
+      <td>527062</td>
+      <td>Joe</td>
+      <td>密云区</td>
+      <td>40.68434</td>
+      <td>117.17231</td>
+      <td>Private room</td>
+      <td>1201</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2017-10-08</td>
+      <td>0.10</td>
+      <td>4</td>
+      <td>0</td>
+      <td>2017</td>
+      <td>10</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>128496</td>
+      <td>Heart of Beijing: House with View 2</td>
+      <td>467520</td>
+      <td>Cindy</td>
+      <td>东城区</td>
+      <td>39.93213</td>
+      <td>116.42200</td>
+      <td>Entire home/apt</td>
+      <td>389</td>
+      <td>3</td>
+      <td>259</td>
+      <td>2019-02-05</td>
+      <td>2.70</td>
+      <td>1</td>
+      <td>93</td>
+      <td>2019</td>
+      <td>2</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>161902</td>
+      <td>cozy studio in center of Beijing</td>
+      <td>707535</td>
+      <td>Robert</td>
+      <td>东城区</td>
+      <td>39.93357</td>
+      <td>116.43577</td>
+      <td>Entire home/apt</td>
+      <td>376</td>
+      <td>1</td>
+      <td>26</td>
+      <td>2016-12-03</td>
+      <td>0.28</td>
+      <td>5</td>
+      <td>290</td>
+      <td>2016</td>
+      <td>12</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>162144</td>
+      <td>nice studio near subway, sleep 4</td>
+      <td>707535</td>
+      <td>Robert</td>
+      <td>朝阳区</td>
+      <td>39.93668</td>
+      <td>116.43798</td>
+      <td>Entire home/apt</td>
+      <td>537</td>
+      <td>1</td>
+      <td>37</td>
+      <td>2018-08-01</td>
+      <td>0.40</td>
+      <td>5</td>
+      <td>352</td>
+      <td>2018</td>
+      <td>8</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+df_year=data["year"].value_counts()
+```
+
+
+```python
+df_month=data["month"].value_counts().to_frame().reset_index().sort_values(by="index")
+```
+
+
+```python
+plt.plot(df_year.index.tolist(),df_year.values.tolist())
+```
+
+
+
+
+    [<matplotlib.lines.Line2D at 0x16caa99a108>]
+
+
+
+
+![png](output_49_1.png)
+
+
+
+```python
+plt.plot(df_month["index"],df_month["month"])
+```
+
+
+
+
+    [<matplotlib.lines.Line2D at 0x16caac2d9c8>]
+
+
+
+
+![png](output_50_1.png)
+
+
+分析：短租的信息从2016年开始增长，18-19年猛增；而从月份来看3-4月份是旺季，而5月之后属于淡季。
+
+# 评论文本分析
+
+
+```python
+df=pd.read_csv("reviews_detail.csv")
+```
+
+
+```python
+df.info()
+```
+
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 202099 entries, 0 to 202098
+    Data columns (total 6 columns):
+    listing_id       202099 non-null int64
+    id               202099 non-null int64
+    date             202099 non-null object
+    reviewer_id      202099 non-null int64
+    reviewer_name    202093 non-null object
+    comments         201983 non-null object
+    dtypes: int64(3), object(3)
+    memory usage: 9.3+ MB
+    
+
+
+```python
+df["Chinese"]=df["comments"].apply(lambda x:re.sub("[A-Za-z0-9\!\%\?()./[\]\- 	:;,\。 ' ...r'\n\r\n\r\n' 	]", "",str(x))) #滤除非汉字部分
+```
+
+
+```python
+ df["English"]=df["comments"].apply(lambda x:''.join(re.findall(r'[  A-Za-z ]', str(x))))
+```
+
+
+```python
+df.tail()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>listing_id</th>
+      <th>id</th>
+      <th>date</th>
+      <th>reviewer_id</th>
+      <th>reviewer_name</th>
+      <th>comments</th>
+      <th>Chinese</th>
+      <th>English</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>202094</td>
+      <td>33889408</td>
+      <td>438178936</td>
+      <td>2019-04-16</td>
+      <td>255996319</td>
+      <td>小倩</td>
+      <td>很不错的,去之前提供的位置信息特别详细,房东有心了,位置很便利,设施也很齐全,非常好的一次住...</td>
+      <td>很不错的去之前提供的位置信息特别详细房东有心了位置很便利设施也很齐全非常好的一次住宿体验~</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>202095</td>
+      <td>33890728</td>
+      <td>438182720</td>
+      <td>2019-04-16</td>
+      <td>255995373</td>
+      <td>志辉</td>
+      <td>非常棒的房子,住的很开心｡ 地址位置很方便, 房间布置和装修都很奈斯,沙发床特别舒服哈哈</td>
+      <td>非常棒的房子住的很开心｡地址位置很方便房间布置和装修都很奈斯沙发床特别舒服哈哈</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>202096</td>
+      <td>33891613</td>
+      <td>438182693</td>
+      <td>2019-04-16</td>
+      <td>255994654</td>
+      <td>天佑</td>
+      <td>房间布置明亮温暖而别有风格,指引周到而迅速,房间内设施齐全､空间宽敞!</td>
+      <td>房间布置明亮温暖而别有风格指引周到而迅速房间内设施齐全､空间宽敞</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>202097</td>
+      <td>33892088</td>
+      <td>438119657</td>
+      <td>2019-04-16</td>
+      <td>255993753</td>
+      <td>志强</td>
+      <td>各方面这个价位性价比是非常之高了,房东人也很好,交通便利,我个人是很满意的,有机会还会来｡</td>
+      <td>各方面这个价位性价比是非常之高了房东人也很好交通便利我个人是很满意的有机会还会来｡</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>202098</td>
+      <td>33925874</td>
+      <td>438572523</td>
+      <td>2019-04-17</td>
+      <td>256375057</td>
+      <td>玲</td>
+      <td>The host canceled this reservation 13 days bef...</td>
+      <td></td>
+      <td>The host canceled this reservation  days befor...</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+df["Chinese"].to_csv("Chinese_comments.csv",index=False,header=False)
+df["English"].to_csv("English_comments.csv",index=False,header=False)
+```
+
+
+```python
+import jieba
+excludes = {"我们","特别","可以","入住","非常","房东","房间","真的","但是","还有","没有","问题","一个"}#{"将军","却说","丞相"}
+txt = open("Chinese_comments.csv", "r", encoding='utf-8').read()
+words  = jieba.lcut(txt)
+counts = {}
+for word in words:
+    if len(word) == 1:  #排除单个字符的分词结果
+        continue
+    else:
+        counts[word] = counts.get(word,0) + 1
+for word in excludes:
+    del(counts[word])
+items = list(counts.items())
+items.sort(key=lambda x:x[1], reverse=True) 
+# for i in range(15):
+#     word, count = items[i]
+#     print ("{0:<10}{1:>5}".format(word, count))
+
+```
+
+
+```python
+from pyecharts import options as opts
+from pyecharts.charts import Page, WordCloud
+from pyecharts.globals import SymbolType
+word = WordCloud()
+word.add('',items[:50],word_size_range=[20, 100],shape=SymbolType.DIAMOND)
+word.set_global_opts(title_opts=opts.TitleOpts(title="comments WordCloud"))
+word.render_notebook()
+```
+
+
+
+
+
+<script>
+    require.config({
+        paths: {
+            'echarts':'https://assets.pyecharts.org/assets/echarts.min', 'echarts-wordcloud':'https://assets.pyecharts.org/assets/echarts-wordcloud.min'
+        }
+    });
+</script>
+
+        <div id="895a57abe8044001a09125a7094d735a" style="width:900px; height:500px;"></div>
+
+<script>
+        require(['echarts', 'echarts-wordcloud'], function(echarts) {
+                var chart_895a57abe8044001a09125a7094d735a = echarts.init(
+                    document.getElementById('895a57abe8044001a09125a7094d735a'), 'white', {renderer: 'canvas'});
+                var option_895a57abe8044001a09125a7094d735a = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "wordCloud",
+            "shape": "diamond",
+            "rotationRange": [
+                0,
+                0
+            ],
+            "rotationStep": 45,
+            "girdSize": 20,
+            "sizeRange": [
+                20,
+                100
+            ],
+            "data": [
+                {
+                    "name": "\u65b9\u4fbf",
+                    "value": 52044,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(91,44,1)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5e72\u51c0",
+                    "value": 43828,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(135,128,117)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u623f\u5b50",
+                    "value": 43115,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(4,118,21)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4e0d\u9519",
+                    "value": 29395,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(4,57,68)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4f4d\u7f6e",
+                    "value": 29074,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(1,115,38)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5317\u4eac",
+                    "value": 26043,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(9,97,120)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4f53\u9a8c",
+                    "value": 24307,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(160,37,3)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u70ed\u60c5",
+                    "value": 23240,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(31,15,32)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5c31\u662f",
+                    "value": 21275,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(46,137,67)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5730\u94c1\u7ad9",
+                    "value": 19674,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(137,17,155)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8212\u670d",
+                    "value": 19643,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(134,93,102)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4ea4\u901a",
+                    "value": 19582,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(91,15,12)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8d85\u7ea7",
+                    "value": 16882,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(48,52,131)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u611f\u89c9",
+                    "value": 16580,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(159,21,32)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4e0b\u6b21",
+                    "value": 16038,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(35,2,47)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5730\u7406\u4f4d\u7f6e",
+                    "value": 16023,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(125,15,85)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6e29\u99a8",
+                    "value": 15324,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(29,56,66)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5f88\u591a",
+                    "value": 15237,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(25,70,107)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u63a8\u8350",
+                    "value": 15190,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(84,59,30)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4fbf\u5229",
+                    "value": 14691,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(121,4,127)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5c0f\u533a",
+                    "value": 14685,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(14,93,148)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6bd4\u8f83",
+                    "value": 14550,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(150,48,55)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6574\u6d01",
+                    "value": 14395,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(101,91,11)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u559c\u6b22",
+                    "value": 14234,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(53,138,35)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8bbe\u65bd",
+                    "value": 14205,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(66,151,36)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u9f50\u5168",
+                    "value": 13452,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(137,122,50)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5f88\u68d2",
+                    "value": 13231,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(55,145,100)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6027\u4ef7\u6bd4",
+                    "value": 13087,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(75,34,136)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8212\u9002",
+                    "value": 12768,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(29,71,8)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u88c5\u4fee",
+                    "value": 12662,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(128,137,104)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5730\u94c1",
+                    "value": 12428,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(104,139,44)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u4e00\u6b21",
+                    "value": 12018,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(57,0,18)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5b89\u9759",
+                    "value": 11877,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(109,151,27)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u9644\u8fd1",
+                    "value": 11862,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(9,40,118)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8fd8\u662f",
+                    "value": 11292,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(96,113,69)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5c0f\u59d0\u59d0",
+                    "value": 11260,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(23,66,108)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8fd9\u91cc",
+                    "value": 11217,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(2,128,147)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u623f\u4e3b",
+                    "value": 10838,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(114,108,110)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5730\u65b9",
+                    "value": 10416,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(23,37,32)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6ee1\u610f",
+                    "value": 10294,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(154,129,142)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u665a\u4e0a",
+                    "value": 10107,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(8,131,32)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u8d34\u5fc3",
+                    "value": 9758,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(122,38,54)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6c11\u5bbf",
+                    "value": 9740,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(21,8,32)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u6709\u70b9",
+                    "value": 9640,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(119,154,154)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u73af\u5883",
+                    "value": 9469,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(64,151,147)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u56de\u590d",
+                    "value": 9361,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(121,129,29)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u800c\u4e14",
+                    "value": 9320,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(16,133,130)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u53ca\u65f6",
+                    "value": 8982,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(15,72,13)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u59d0\u59d0",
+                    "value": 8814,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(108,17,129)"
+                        }
+                    }
+                },
+                {
+                    "name": "\u5f88\u8fd1",
+                    "value": 8522,
+                    "textStyle": {
+                        "normal": {
+                            "color": "rgb(10,138,140)"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "legend": [
+        {
+            "data": [],
+            "selected": {},
+            "show": true
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0
+    },
+    "title": [
+        {
+            "text": "comments WordCloud"
+        }
+    ]
+};
+                chart_895a57abe8044001a09125a7094d735a.setOption(option_895a57abe8044001a09125a7094d735a);
+        });
+    </script>
+
+
+
+
+分析：租客关注点偏向一下四项
+房主：'房东','热情'
+房子：'房间','设施','干净','整洁','装修'
+位置：'地理位置','附近','地铁站','交通'
+价格：'性价比'
+
+# #特征相关性
+
+
+```python
+data=data[["id","host_id","neighbourhood", "room_type", "price" ,"minimum_nights", "number_of_reviews" ,"last_review", "reviews_per_month" ,"availability_365"]]
+colormap = plt.cm.RdBu
+fig3,ax1=plt.subplots(1,1)
+plt.title('Pearson Correlation of Features', y=1.05, size=14)
+sns.heatmap(data.corr(),linewidths=0.1,vmax=1.0, square=True,
+            cmap=colormap, linecolor='white', annot=True,annot_kws={'size':8,'color':'black'},ax=ax1)
+ax1.tick_params(axis='y',labelsize=12)
+ax1.tick_params(axis='x',labelsize=12)
+plt.show()
+```
+
+
+![png](output_63_0.png)
+
+
+
+```python
+
+```
