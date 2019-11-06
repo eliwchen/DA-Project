@@ -1,0 +1,268 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sklearn
+from sklearn import tree
+import sys
+import os
+import time
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
+
+
+pd.set_option("display.max_columns",None) #显示所有列
+pd.set_option('display.max_rows', None)  #显示所有行
+pd.set_option('display.width',2000) #设置显示宽度
+plt.rcParams['font.sans-serif']=['Microsoft YaHei'] # 正常显示中文字体
+plt.style.use('ggplot') #选择美化样式 ['bmh', 'classic', 'dark_background', 'fast', 'fivethirtyeight', 'ggplot', 'grayscale', 'seaborn-bright', 'seaborn-colorblind', 'seaborn-dark-palette', 'seaborn-dark', 'seaborn-darkgrid', 'seaborn-deep', 'seaborn-muted', 'seaborn-notebook', 'seaborn-paper', 'seaborn-pastel', 'seaborn-poster', 'seaborn-talk', 'seaborn-ticks', 'seaborn-white', 'seaborn-whitegrid', 'seaborn', 'Solarize_Light2', 'tableau-colorblind10', '_classic_test']
+sns.set_style({'font.sans-serif':['simhei','Arial']}) #设置字体风格
+# sns.set()#切换到seaborn的默认运行配置
+
+start_time=time.time()
+"""
+数据导入
+"""
+dataraw=pd.read_csv("lianjia.csv")
+data=dataraw.copy()
+
+"""
+数据总览
+"""
+# print(data.info())
+# print(data.describe())
+
+"""
+特征工程-特征清洗，预处理（归一化，降维，特征选择，特征筛选等等），监控等
+"""
+# """Region"""
+# print(data["Region"].value_counts())
+#
+# """District"""
+# print(data["District"].value_counts())
+#
+# """Size"""
+# print(data["Size"].value_counts())
+# print(data["Size"].describe())
+#
+# """Renovation"""
+# print(data["Renovation"].value_counts())
+
+"""Direction"""
+print(data["Direction"].value_counts())
+"""分析：数据格式不统一，滤除不符合格式的数据，同时进行格式规整"""
+data=data[~data["Direction"].str.contains("米")] #筛选不包含“米”的数据
+data["Direction"]=data["Direction"].apply(lambda x:set(x)) #用集合去除单元格的重复字符
+data["Direction"]=data["Direction"].apply(lambda x:sorted(x)) #集合元素排序
+data["Direction"]=data["Direction"].apply(lambda x:"".join(x)) #集合转换为字符串
+
+# print(data["Direction"].value_counts().sort_values())
+
+"""Elevator"""
+# print(data["Elevator"].value_counts())
+"""分析：存在很多空值，因此需要空值处理"""
+data.loc[(data["Floor"]>=6)&(data["Elevator"].isnull()),"Elevator"]="有电梯" #根据工程建设标准，一般六楼（含六楼）以上有电梯
+data.loc[(data["Floor"]<6)&(data["Elevator"].isnull()),"Elevator"]="无电梯"
+data=data[(data["Elevator"]=="有电梯")|(data["Elevator"]=="无电梯")] #只筛选有、无电梯的数据
+# print(data["Elevator"].value_counts())
+
+"""Elevator"""
+# print(data["Floor"].value_counts())
+
+"""Layout"""
+# print(data["Layout"].value_counts())
+"""分析：格式不统一，出现房间、室、厅、卫的混合搭配，应该规范格式，如：X室X厅X卫，并进行拆分，细化粒度"""
+data["Layout"]=data["Layout"].apply(lambda x:x.replace("房间","室"))
+data=data[~data["Layout"].str.contains("卫")] #筛选不包含“卫”的数据
+data["room_num"]=data["Layout"].apply(lambda x:x[0])
+data["hall_num"]=data["Layout"].apply(lambda x:x[2])
+# print(data["Layout"].value_counts())
+# print(data.head(5))
+
+
+""" 追加新特征，选用需要分析的属性列,调整属性列顺序"""
+data["PerPrice"]=round(data["Price"]/data["Size"],2)
+data=data[["Year","Region" ,"District","Direction","Layout","room_num",
+           "hall_num","Floor" ,"Elevator","Renovation", "Size" ,"PerPrice", "Price"]]
+print(data.head(5))
+
+"""数据分析-探索性分析"""
+mypal=sns.diverging_palette(200, 20, l=40, n=4)
+
+"""区域分析"""
+##绘制非对称子图
+# fig1=plt.figure() #设置图窗口
+# ax1=plt.subplot2grid((2,2),(0,0)) #设置第一张子图，位置0,0
+# ax2=plt.subplot2grid((2,2),(0,1))  #设置第二张子图，位置0,1
+# ax3=plt.subplot2grid((2,2),(1,0),colspan=2)  #设置第三张子图，位置1,0开始，列跨度为2
+# plt.subplots_adjust(wspace=0.1, hspace=0.2)  # 调整子图间距
+#
+# sns.barplot(x='Region', y='PerPrice', palette="Blues_d", data=data, ax=ax1) #统计北京各大区二手房每平米单价
+# ax1.tick_params(axis='x',labelsize=6)
+# ax1.tick_params(axis='y',labelsize=6)
+# ax1.set_xlabel('区域',fontsize=10)
+# ax1.set_ylabel('每平米单价（均价）',fontsize=10)
+#
+# sns.countplot(data['Region'], palette="Greens_d", ax=ax2) #统计北京各大区二手房数量
+# ax2.tick_params(axis='x',labelsize=6)
+# ax2.tick_params(axis='y',labelsize=6)
+# ax2.set_xlabel('区域',fontsize=10)
+# ax2.set_ylabel('二手房数量',fontsize=10)
+#
+# sns.boxplot(x='Region', y='Price', data=data, ax=ax3)
+# ax3.tick_params(axis='x',labelsize=8)
+# ax3.tick_params(axis='y',labelsize=8)
+# ax3.set_xlabel('区域',fontsize=10)
+# ax3.set_ylabel('二手房总价',fontsize=10)
+#
+# plt.show()
+
+"""面积分析"""
+fig2,[ax1,ax2]=plt.subplots(1,2)
+sns.distplot(data['Size'],ax=ax1,bins=20) #面积分布情况（直方图 ）
+sns.kdeplot(data["Size"],shade=True,ax=ax1)#生成核密度图
+sns.regplot("Size","Price",data=data,ax=ax2)#相关关系图
+plt.show()
+
+"""户型分析"""
+# fig3,[ax1,ax2]=plt.subplots(2,1)
+# df_layout=data.groupby("Layout")["Size"].count().sort_values(ascending=False).to_frame().reset_index()
+# sns.barplot(y="Layout",x="Size",data=df_layout.head(20),ax=ax1,orient="h",palette=mypal)
+# ax1.set_xlabel("数量",fontsize=12)
+# ax1.set_ylabel("户型",fontsize=12)
+#
+# sns.barplot(x='Layout', y='PerPrice', palette=mypal, data=data, ax=ax2) #统计各户型二手房每平米单价
+# ax2.tick_params(axis='x',labelsize=6)
+# ax2.tick_params(axis='y',labelsize=6)
+# ax2.set_xlabel('户型',fontsize=10)
+# ax2.set_ylabel('每平米单价（均价）',fontsize=10)
+# plt.show()
+
+# """年份分析"""
+# fig4=plt.figure()
+# ax1=plt.subplot2grid((2,1),(0,0)) #设置第一张子图，位置0,0
+# ax2=plt.subplot2grid((2,1),(1,0))  #设置第二张子图，位置0,1
+# sns.regplot(x="Year",y="Price",data=data,ax=ax1)
+# sns.barplot(x="Year",y="Price",data=data,ax=ax2,palette=mypal)
+# ax2.tick_params(axis='x',labelsize=4)
+# plt.show()
+
+# """电梯分析"""
+# fig5,[ax1,ax2]=plt.subplots(1,2)
+# sns.countplot(data["Elevator"],palette=mypal,ax=ax1)
+# sns.barplot(x="Elevator",y="PerPrice",data=data,palette=mypal,ax=ax2)
+# plt.show()
+
+"""特征相关性"""
+# data_corr
+# colormap = plt.cm.RdBu
+# plt.figure(figsize=(30,30))
+# # plt.title('Pearson Correlation of Features', y=1.05, size=15)
+# sns.heatmap(data.corr(),linewidths=0.1,vmax=1.0, square=True,
+#             cmap=colormap, linecolor='white', annot=True)
+# plt.show()
+
+"""特征工程"""
+data=data[["Year","Region" ,"District","Direction",
+           "room_num","hall_num","Floor" , "Size" , "Price"]]
+
+"""分类变量转换为数值型"""
+# 将三分类变量转换为数值型变量
+labels = data["Region"].unique().tolist()  # tolist()将数组array变为列表list
+data["Region"] = data["Region"].apply(lambda x: labels.index(x))
+labels2 = data["District"].unique().tolist()  # tolist()将数组array变为列表list
+data["District"] = data["District"].apply(lambda x: labels2.index(x))
+labels3 = data["Direction"].unique().tolist()  # tolist()将数组array变为列表list
+data["Direction"] = data["Direction"].apply(lambda x: labels3.index(x))
+labels4 = data["Size"].unique().tolist()  # tolist()将数组array变为列表list
+data["Size"] = data["Size"].apply(lambda x: labels4.index(x))
+
+"""数据划分"""
+# 转换训练测试集格式为数组
+features=data.iloc[:, data.columns != "Price"]
+# features = np.array(features)
+target=data.iloc[:, data.columns == "Price"]
+# target = np.array(target)
+
+# 导入sklearn进行训练测试集划分
+from sklearn.model_selection import train_test_split
+features_train, features_test, target_train, target_test = \
+    train_test_split(features, target, test_size=0.2, random_state=25)
+# 修正测试集和训练集的索引
+for i in [features_train, features_test,target_train, target_test]:
+    i.index = range(i.shape[0])
+print(features_train.head())
+
+"""初始模型"""
+from sklearn.model_selection import KFold
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import GridSearchCV
+
+clf = DecisionTreeRegressor(splitter='best',max_depth=12)
+clf=clf.fit(features_train,target_train)
+score_tr = clf.score(features_train,target_train)
+score_te = clf.score(features_test,target_test) #测试集分数
+score_tc= cross_val_score(clf, features, target, cv=10).mean()  # 使用交叉验证
+print(score_tr,score_te,score_tr)
+
+# """3.3拟合程度观测"""
+# tr = []
+# te = []
+# tc = []
+# N=10
+# for i in range(N):
+#     clf = DecisionTreeRegressor(random_state=25
+#                                  ,max_depth=i+1 #拟合不同最大深度的决策树
+#                                  ,criterion="mse"#尝试调参，让结果更好
+#                                 )
+#     clf = clf.fit(features_train, target_train)
+#     score_tr = clf.score(features_train,target_train)#训练集分数
+#     score_te = clf.score(features_test, target_test)  #测试集分数
+#     score_tc = cross_val_score(clf,features,target,cv=10).mean()#模型交叉验证分数
+#     tr.append(score_tr)
+#     te.append(score_te)
+#     tc.append(score_tc)
+# print(max(tc))
+# plt.plot(range(1,N+1),tr,color="red",label="train")
+# plt.plot(range(1,N+1),te,color="blue",label="test")
+# plt.plot(range(1,N+1),tc,color="green",label="cross")
+# plt.xticks(range(1,N+1))#横坐标标尺，只显示1-10。
+# plt.legend()
+# plt.xlabel("max_depth")
+# plt.ylabel("score")
+# plt.show()
+# end_time=time.time()
+# print("Time used:",end_time-start_time)
+
+"""网格搜索进行参数设置"""
+
+# 网格搜索：能够帮助我们同时调整多个参数的技术，枚举技术
+gini_thresholds = np.linspace(0, 0.5, 20)  # 基尼系数的边界
+# entropy_thresholds = np.linespace(0, 1, 50)
+
+# 一串参数和这些参数对应的，我们希望网格搜索来搜索的参数的取值范围
+parameters = {'splitter': ('best', 'random')
+    , 'criterion': ("mse","friedman_mse","mae")
+    , "max_depth": [*range(5, 7)]
+    , 'min_samples_leaf': [*range(1, 50, 5)]
+    }
+
+clf = DecisionTreeRegressor(random_state=25)  # 实例化决策树
+GS = GridSearchCV(clf, parameters, cv=12)  # 实例化网格搜索，cv指的是交叉验证
+GS.fit(features_train, target_train.astype("int"))
+print(GS.best_params_ ) # 从我们输入的参数和参数取值的列表中，返回最佳组合
+print(GS.best_score_ ) # 网格搜索后的模型的评判标准
+#
+# """预测"""
+# data_pre=features.iloc[2:14,]
+# result=clf.predict(data_pre)
+# print(result)
+# """可视化"""
+# import pydotplus
+# os.environ["PATH"] += os.pathsep + 'E:/Program Files (x86)/Graphviz2.38/bin/'
+# dot_data = tree.export_graphviz(clf, out_file=None)
+# graph = pydotplus.graph_from_dot_data(dot_data)
+# graph.write_pdf("House price.pdf")
